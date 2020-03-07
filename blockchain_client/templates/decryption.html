@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Blockchain Frontend</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/vendor/DataTables/css/datatables.min.css" rel="stylesheet">
+    <link href="/static/css/custom.css" rel="stylesheet">
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">Blockchain Client</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/">Wallet Generator
+              </a>
+            </li>
+            <li class="nav-item active">
+              <a class="nav-link" href="/make/transaction">Make Transaction</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/view/transactions">View Transactions</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/encryption">Encryption</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/decryption">Decryption</a>
+              <span class="sr-only">(current)</span>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/decryption/get/abe/request">Decryption Encrypted ABE key</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    
+    <!-- Encryption function using ABE -->
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12">
+
+          <div class="card-body">
+            <h4 class="card-title">Decrypt data using ABE private key</h4>
+            <p class="card-text">Input private key content from transactions and decrypt data</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="container alert alert-secondary">
+      <form id="data_decrypt_form" method='POST' enctype="multipart/form-data">
+        <div class="row">
+          <label class="col-sm-2">Private key content from transaction:</label>
+          <div class="col-sm-10">
+            <input type="text" name="private_key" autocomplete="off" required rows="2" class="form-control">
+          </div>
+        </div>
+
+        <br>
+
+        <div class="row">
+          <label class="col-sm-2">Data file to decrypt:</label>
+          <div class="col-sm-10">
+            <input type="file" name="data_encrypted" autocomplete="off" required rows="2" class="form-control">
+          </div>
+        </div>
+
+        <br>
+
+        <div class="row">
+          <label class="col-sm-2">Public key file</label>
+          <div class="col-sm-10">
+            <input type="file" name="public_key" autocomplete="off" required rows="2" class="form-control">
+          </div>
+        </div>
+
+        <br>
+
+        <div class="row">
+          <div class="col-lg-12 text-center">
+            <input type="button" id="decrypt_button" class="btn btn-primary btn-lg" value="Decrypt data">
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <hr>
+
+    <div class="container">
+      <div class="row">
+          <div class="col-lg-12 text-center" id ='file_download'>
+          </div>
+        </div>
+    </div>
+
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="/static/vendor/jquery/jquery.min.js"></script>
+    <script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="/static/vendor/DataTables/js/datatables.min.js"></script>
+    <script src="/static/vendor/DataTables/js/ellipsis.js"></script>
+
+
+    <script>
+      $(function() {
+          $('#decrypt_button').click(function() {
+              var form = $('#data_decrypt_form')[0];
+              var form_data = new FormData(form);
+              $.ajax({
+                type: 'GET',
+                url: 'http://127.0.0.1:5000/private_key/request_revoke',
+                headers: {'Access-Control-Allow-Origin':'*'},
+                dataType : 'json',
+                contentType: 'application/json',
+                success: function(response){
+                  form_data.append('public_key_revoke', response['negative_attributes_list']);
+                  $.ajax({
+                    type: 'POST',
+                    url: '/data/decrypt',
+                    data: form_data,//form_data,
+                    dataType : 'json',
+                    contentType: false,
+                    cache: false,
+                    processData: false,
+                    async: false,
+                    success: function(response) {
+                      var link = '';
+                      if (response['down_link'] == 'Your key has already been revoked'){
+                        link = response['down_link'];
+                      }
+                      else{
+                        link = "<a href= " + response['down_link'] +  " download>Download decrypted file</a>";
+                      }
+                      $('#file_download').html(link);
+                    },
+                  });
+                },
+              });
+              // $.ajax({
+              //     type: 'POST',
+              //     url: '/data/decrypt',
+              //     data: form_data,
+              //     dataType : 'json',
+              //     contentType: false,
+              //     cache: false,
+              //     processData: false,
+              //     async: false,
+              //     success: function(response) {
+              //       var link = "<a href= " + response['down_link'] +  " download>Download encrypted file</a>";
+              //       $('#file_download').html(link);
+              //     },
+              // });
+          });
+      });
+    </script>
+
+
+  </body>
+
+</html>
